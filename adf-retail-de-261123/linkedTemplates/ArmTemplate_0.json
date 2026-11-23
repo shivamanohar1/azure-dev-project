@@ -1,0 +1,941 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-retail-de-261123"
+		},
+		"ls_retail_crm_cosmos_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_retail_crm_cosmos'"
+		},
+		"ls_retail_pos_sql_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_retail_pos_sql'"
+		},
+		"ls_retail_storage_mi_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_retail_storage_mi'"
+		},
+		"ls_retail_storage_sql_private_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_retail_storage_sql_private'"
+		},
+		"ls_retail_supplier_sftp_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_retail_supplier_sftp'"
+		},
+		"ls_retail_pos_sql_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sql-retail-pos-261117019.database.windows.net"
+		},
+		"ls_retail_pos_sql_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "sqldb-retail-pos"
+		},
+		"ls_retail_pos_sql_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "test1"
+		},
+		"ls_retail_storage_mi_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://retailconn.dfs.core.windows.net/"
+		},
+		"ls_retail_storage_sql_private_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://retailconn.dfs.core.windows.net/"
+		},
+		"ls_retail_supplier_sftp_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "retailconn.blob.core.windows.net"
+		},
+		"ls_retail_supplier_sftp_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "retailconn.supplierdemo"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_retail_crm_cosmos')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_retail_crm_cosmos_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_retail_pos_sql')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('ls_retail_pos_sql_properties_typeProperties_server')]",
+					"database": "[parameters('ls_retail_pos_sql_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_retail_pos_sql_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_retail_pos_sql_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_retail_storage_mi')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_retail_storage_mi_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_retail_storage_mi_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_retail_storage_sql_private')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_retail_storage_sql_private_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_retail_storage_sql_private_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_retail_supplier_sftp')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "Sftp",
+				"typeProperties": {
+					"host": "[parameters('ls_retail_supplier_sftp_properties_typeProperties_host')]",
+					"port": 22,
+					"skipHostKeyValidation": true,
+					"authenticationType": "Basic",
+					"userName": "[parameters('ls_retail_supplier_sftp_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_retail_supplier_sftp_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_retail_crm_cosmos')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_retail_crm_cosmos",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {},
+				"typeProperties": {
+					"collectionName": "customers"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_retail_crm_cosmos')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_retail_crm_landing')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_retail_storage_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"batchId": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "customers.json",
+						"folderPath": {
+							"value": "@concat('crm/cosmos/', dataset().batchId)",
+							"type": "Expression"
+						},
+						"container": "landing"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_retail_storage_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_retail_pos_landing_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_retail_storage_sql_private",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"tableName": {
+						"type": "String"
+					},
+					"batchId": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@concat(dataset().tableName, '.csv')",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('pos/azure-sql/', dataset().tableName, '/', dataset().batchId)",
+							"type": "Expression"
+						},
+						"container": "landing"
+					},
+					"columnDelimiter": ",",
+					"encodingName": "UTF-8",
+					"escapeChar": "\"",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_retail_storage_sql_private')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_retail_pos_sql')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_retail_pos_sql",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"tableName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"typeProperties": {
+					"schema": "dbo",
+					"table": {
+						"value": "@dataset().tableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_retail_pos_sql')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_retail_supplier_landing')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_retail_storage_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "supplier-erp/sftp",
+						"container": "landing"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_retail_storage_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_retail_supplier_sftp')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_retail_supplier_sftp",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "SftpLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_retail_supplier_sftp')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_retail_warehouse_landing')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_retail_storage_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "warehouse-inventory/blob",
+						"container": "landing"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_retail_storage_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_retail_warehouse_source')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_retail_storage_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"container": "warehouse-inventory"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_retail_storage_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_retail_crm_cosmos_incremental')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "CopyChangedCustomers",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "CosmosDbSqlApiSource",
+								"query": {
+									"value": "@concat('SELECT c.id, c.customer_id, c.name, c.city, c.updated_at FROM c WHERE c.updated_at > \"', formatDateTime(pipeline().parameters.fromUtc, 'yyyy-MM-ddTHH:mm:ssZ'), '\" AND c.updated_at <= \"', formatDateTime(pipeline().parameters.toUtc, 'yyyy-MM-ddTHH:mm:ssZ'), '\"')",
+									"type": "Expression"
+								},
+								"preferredRegions": []
+							},
+							"sink": {
+								"type": "JsonSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "JsonWriteSettings",
+									"filePattern": "arrayOfObjects"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['id']"
+										},
+										"sink": {
+											"path": "$['id']"
+										}
+									},
+									{
+										"source": {
+											"path": "$['customer_id']"
+										},
+										"sink": {
+											"path": "$['customer_id']"
+										}
+									},
+									{
+										"source": {
+											"path": "$['name']"
+										},
+										"sink": {
+											"path": "$['name']"
+										}
+									},
+									{
+										"source": {
+											"path": "$['city']"
+										},
+										"sink": {
+											"path": "$['city']"
+										}
+									},
+									{
+										"source": {
+											"path": "$['updated_at']"
+										},
+										"sink": {
+											"path": "$['updated_at']"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_retail_crm_cosmos",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_retail_crm_landing",
+								"type": "DatasetReference",
+								"parameters": {
+									"batchId": {
+										"value": "@pipeline().parameters.batchId",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"fromUtc": {
+						"type": "String",
+						"defaultValue": "2026-11-15T06:00:00Z"
+					},
+					"toUtc": {
+						"type": "String",
+						"defaultValue": "2026-11-16T06:00:00Z"
+					},
+					"batchId": {
+						"type": "String",
+						"defaultValue": "batch-02"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-11-23T12:23:47Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_retail_crm_cosmos')]",
+				"[concat(variables('factoryId'), '/datasets/ds_retail_crm_landing')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_retail_pos_sql_ingest')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_orders",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "@concat('SELECT o.order_id, o.customer_id, CONVERT(varchar(19), CAST(SWITCHOFFSET(o.order_timestamp, ''+00:00'') AS datetime2(0)), 126) + ''Z'' AS order_timestamp, CONVERT(varchar(19), CAST(SWITCHOFFSET(o.updated_at, ''+00:00'') AS datetime2(0)), 126) + ''Z'' AS updated_at, o.status FROM dbo.orders o WHERE o.updated_at > CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.fromUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''') AND o.updated_at <= CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.toUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''')')",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".csv"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_retail_pos_sql",
+								"type": "DatasetReference",
+								"parameters": {
+									"tableName": "orders"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_retail_pos_landing_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"tableName": "orders",
+									"batchId": {
+										"value": "@pipeline().parameters.batchId",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Copy_order_items",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "@concat('SELECT i.order_item_id,i.order_id,i.product_id,i.quantity,i.unit_price FROM dbo.order_items i JOIN dbo.orders o ON o.order_id=i.order_id WHERE o.updated_at > CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.fromUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''') AND o.updated_at <= CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.toUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''')')",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".csv"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_retail_pos_sql",
+								"type": "DatasetReference",
+								"parameters": {
+									"tableName": "order_items"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_retail_pos_landing_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"tableName": "order_items",
+									"batchId": {
+										"value": "@pipeline().parameters.batchId",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Copy_payments",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "@concat('SELECT p.payment_id,p.order_id,p.amount,p.currency,p.method FROM dbo.payments p JOIN dbo.orders o ON o.order_id=p.order_id WHERE o.updated_at > CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.fromUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''') AND o.updated_at <= CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.toUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''')')",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".csv"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_retail_pos_sql",
+								"type": "DatasetReference",
+								"parameters": {
+									"tableName": "payments"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_retail_pos_landing_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"tableName": "payments",
+									"batchId": {
+										"value": "@pipeline().parameters.batchId",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"fromUtc": {
+						"type": "String",
+						"defaultValue": "1900-01-01T00:00:00Z"
+					},
+					"toUtc": {
+						"type": "String",
+						"defaultValue": "2026-11-16T09:05:00Z"
+					},
+					"batchId": {
+						"type": "String",
+						"defaultValue": "pos-full-demo"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-11-23T11:41:38Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_retail_pos_sql')]",
+				"[concat(variables('factoryId'), '/datasets/ds_retail_pos_landing_csv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_retail_supplier_sftp_ingest')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "CheckLandingFile",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_retail_supplier_landing",
+								"type": "DatasetReference",
+								"parameters": {
+									"fileName": {
+										"value": "@pipeline().parameters.fileName",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": false
+							}
+						}
+					},
+					{
+						"name": "CopyOnlyIfMissing",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "CheckLandingFile",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(activity('CheckLandingFile').output.exists)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "CopySupplierFile",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "BinarySource",
+											"storeSettings": {
+												"type": "SftpReadSettings",
+												"recursive": false
+											}
+										},
+										"sink": {
+											"type": "BinarySink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_retail_supplier_sftp",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": {
+													"value": "@pipeline().parameters.fileName",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_retail_supplier_landing",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": {
+													"value": "@pipeline().parameters.fileName",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 1,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"fileName": {
+						"type": "String",
+						"defaultValue": "purchase-orders-2026-11-16.csv"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-11-23T12:11:12Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_retail_supplier_landing')]",
+				"[concat(variables('factoryId'), '/datasets/ds_retail_supplier_sftp')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_retail_warehouse_blob_ingest')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "CopyInventorySnapshot",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_retail_warehouse_source",
+								"type": "DatasetReference",
+								"parameters": {
+									"fileName": {
+										"value": "@pipeline().parameters.fileName",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_retail_warehouse_landing",
+								"type": "DatasetReference",
+								"parameters": {
+									"fileName": {
+										"value": "@pipeline().parameters.fileName",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"fileName": {
+						"type": "String",
+						"defaultValue": "inventory-2026-11-16.csv"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-11-23T11:41:39Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_retail_warehouse_source')]",
+				"[concat(variables('factoryId'), '/datasets/ds_retail_warehouse_landing')]"
+			]
+		}
+	]
+}

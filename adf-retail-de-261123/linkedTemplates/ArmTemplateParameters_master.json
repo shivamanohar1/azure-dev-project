@@ -1,0 +1,51 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-retail-de-261123"
+		},
+		"ls_retail_crm_cosmos_connectionString": {
+			"value": ""
+		},
+		"ls_retail_pos_sql_password": {
+			"value": ""
+		},
+		"ls_retail_storage_mi_accountKey": {
+			"value": ""
+		},
+		"ls_retail_storage_sql_private_accountKey": {
+			"value": ""
+		},
+		"ls_retail_supplier_sftp_password": {
+			"value": ""
+		},
+		"ls_retail_pos_sql_properties_typeProperties_server": {
+			"value": "sql-retail-pos-261117019.database.windows.net"
+		},
+		"ls_retail_pos_sql_properties_typeProperties_database": {
+			"value": "sqldb-retail-pos"
+		},
+		"ls_retail_pos_sql_properties_typeProperties_userName": {
+			"value": "test1"
+		},
+		"ls_retail_storage_mi_properties_typeProperties_url": {
+			"value": "https://retailconn.dfs.core.windows.net/"
+		},
+		"ls_retail_storage_sql_private_properties_typeProperties_url": {
+			"value": "https://retailconn.dfs.core.windows.net/"
+		},
+		"ls_retail_supplier_sftp_properties_typeProperties_host": {
+			"value": "retailconn.blob.core.windows.net"
+		},
+		"ls_retail_supplier_sftp_properties_typeProperties_userName": {
+			"value": "retailconn.supplierdemo"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
