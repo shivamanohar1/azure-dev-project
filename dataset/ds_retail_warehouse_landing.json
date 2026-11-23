@@ -1,0 +1,28 @@
+{
+	"name": "ds_retail_warehouse_landing",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_retail_storage_mi",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "warehouse-inventory/blob",
+				"container": "landing"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

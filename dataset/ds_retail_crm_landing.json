@@ -1,0 +1,29 @@
+{
+	"name": "ds_retail_crm_landing",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_retail_storage_mi",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"batchId": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "customers.json",
+				"folderPath": {
+					"value": "@concat('crm/cosmos/', dataset().batchId)",
+					"type": "Expression"
+				},
+				"container": "landing"
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

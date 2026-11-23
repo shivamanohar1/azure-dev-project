@@ -1,0 +1,192 @@
+{
+	"name": "pl_retail_pos_sql_ingest",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy_orders",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('SELECT o.order_id, o.customer_id, CONVERT(varchar(19), CAST(SWITCHOFFSET(o.order_timestamp, ''+00:00'') AS datetime2(0)), 126) + ''Z'' AS order_timestamp, CONVERT(varchar(19), CAST(SWITCHOFFSET(o.updated_at, ''+00:00'') AS datetime2(0)), 126) + ''Z'' AS updated_at, o.status FROM dbo.orders o WHERE o.updated_at > CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.fromUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''') AND o.updated_at <= CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.toUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''')')",
+							"type": "Expression"
+						},
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".csv"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_retail_pos_sql",
+						"type": "DatasetReference",
+						"parameters": {
+							"tableName": "orders"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_retail_pos_landing_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"tableName": "orders",
+							"batchId": {
+								"value": "@pipeline().parameters.batchId",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Copy_order_items",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('SELECT i.order_item_id,i.order_id,i.product_id,i.quantity,i.unit_price FROM dbo.order_items i JOIN dbo.orders o ON o.order_id=i.order_id WHERE o.updated_at > CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.fromUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''') AND o.updated_at <= CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.toUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''')')",
+							"type": "Expression"
+						},
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".csv"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_retail_pos_sql",
+						"type": "DatasetReference",
+						"parameters": {
+							"tableName": "order_items"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_retail_pos_landing_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"tableName": "order_items",
+							"batchId": {
+								"value": "@pipeline().parameters.batchId",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Copy_payments",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('SELECT p.payment_id,p.order_id,p.amount,p.currency,p.method FROM dbo.payments p JOIN dbo.orders o ON o.order_id=p.order_id WHERE o.updated_at > CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.fromUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''') AND o.updated_at <= CONVERT(datetimeoffset(0), ''', formatDateTime(pipeline().parameters.toUtc, 'yyyy-MM-ddTHH:mm:ssZ'), ''')')",
+							"type": "Expression"
+						},
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".csv"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_retail_pos_sql",
+						"type": "DatasetReference",
+						"parameters": {
+							"tableName": "payments"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_retail_pos_landing_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"tableName": "payments",
+							"batchId": {
+								"value": "@pipeline().parameters.batchId",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"fromUtc": {
+				"type": "String",
+				"defaultValue": "1900-01-01T00:00:00Z"
+			},
+			"toUtc": {
+				"type": "String",
+				"defaultValue": "2026-11-16T09:05:00Z"
+			},
+			"batchId": {
+				"type": "String",
+				"defaultValue": "pos-full-demo"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-11-23T11:41:38Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

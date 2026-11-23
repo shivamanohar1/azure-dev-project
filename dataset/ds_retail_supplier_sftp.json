@@ -1,0 +1,26 @@
+{
+	"name": "ds_retail_supplier_sftp",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_retail_supplier_sftp",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "SftpLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

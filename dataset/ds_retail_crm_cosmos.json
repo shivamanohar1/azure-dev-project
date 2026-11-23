@@ -1,0 +1,16 @@
+{
+	"name": "ds_retail_crm_cosmos",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_retail_crm_cosmos",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "CosmosDbSqlApiCollection",
+		"schema": {},
+		"typeProperties": {
+			"collectionName": "customers"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
